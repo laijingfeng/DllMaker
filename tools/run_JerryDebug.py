@@ -57,6 +57,8 @@ def GetDLLFiles(path):
 def GetBuildFiles(path, path2):
     ret = ''
     for f in os.listdir(path):
+        if f.find('.meta') != -1: # 去除Unity的meta文件
+            continue
         sf = os.path.join(path, f)
         sf2 = os.path.join(path2, f)
         if os.path.isfile(sf):
