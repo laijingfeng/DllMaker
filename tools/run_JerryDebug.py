@@ -125,7 +125,7 @@ if __name__ == '__main__':
     
     project_name = args[0]
 
-    DoClean('./', 'run_{}.py'.format(project_name) + '#DLL#open_cmd.bat#data#dll_maker.log#dll_maker-prev.log#logger.py#logger.pyc#run.py#template.cs#template.csproj#template.sln')
+    DoClean('./', 'run_{}.py'.format(project_name) + '#DLL#DLLLib#open_cmd.bat#data#dll_maker.log#dll_maker-prev.log#logger.py#logger.pyc#run.py#template.cs#template.csproj#template.sln')
 
     CopyFiles('data', './')
 
