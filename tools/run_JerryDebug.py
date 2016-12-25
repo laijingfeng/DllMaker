@@ -33,6 +33,8 @@ def DoSln(project_name):
 
 def CopyFiles(sDir, tDir):
     for f in os.listdir(sDir):
+        if f.find('.meta') != -1: # 去除Unity的meta文件
+            continue
         sf = os.path.join(sDir, f)
         tf = os.path.join(tDir, f)
         if os.path.isfile(sf):
