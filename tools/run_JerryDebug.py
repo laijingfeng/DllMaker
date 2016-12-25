@@ -42,6 +42,16 @@ def CopyFiles(sDir, tDir):
         if os.path.isdir(sf):
             CopyFiles(sf, tf)
 
+def GetDLLFiles(path):
+    ret = ''
+    for f in os.listdir(path):
+        sf = os.path.join(path, f)
+        if os.path.isfile(sf):
+            ret = ret + '\n    <Reference Include="' + os.path.splitext(os.path.split(f)[1])[0] + '">\n     <HintPath>' + sf + '</HintPath>\n    </Reference>'
+        if os.path.isdir(sf):
+            ret = ret + GetDLLFiles(sf)
+    return ret
+
 def GetBuildFiles(path, path2):
     ret = ''
     for f in os.listdir(path):
@@ -56,13 +66,13 @@ def GetBuildFiles(path, path2):
 def DoCsproj(project_name):
     text = ''
     buld_files = GetBuildFiles('data', '')
-    buld_files = 'd' + buld_files
-    buld_files = buld_files.replace('d\n    ' ,'')
+    dll_files = GetDLLFiles('DLL')
     
     with open('template.csproj', 'r') as f:
         text = f.read()
         text = Replace(text,'{PROJECT_NAME}', project_name)
         text = Replace(text,'{BUILD_FILES}', buld_files)
+        text = Replace(text,'{DLL_FILES}', dll_files)
     with open('{}.csproj'.format(project_name),'w') as f:
         f.write(text)
 
@@ -102,7 +112,7 @@ def Usage():
     print 'this is Usage()'
     print 'run_XXX.py'
     print 'run.py XXX'
-    
+
 if __name__ == '__main__':
     logger.reset()
 
@@ -122,5 +132,7 @@ if __name__ == '__main__':
     DoSln(project_name)
     DoCsproj(project_name)
     DoAssemblyInfo(project_name)
+
+    os.system('"{}" {}.sln /build Release /out build_log.log'.format('E:\Program Files\VS2010\Common7\IDE\devenv.com', project_name))
 
     logger.info('finish')
