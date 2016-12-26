@@ -5,7 +5,6 @@
 import sys, os
 import shutil
 from logger import Logger
-from datetime import datetime
 
 logger = Logger(Logger.LEVEL_INFO, 'dll_maker')
 
@@ -87,18 +86,19 @@ def DoCsproj(project_name):
     with open('{}.csproj'.format(project_name),'w') as f:
         f.write(text)
 
-def DoAssemblyInfo(project_name):
+def DoAssemblyInfo(project_name, project_version):
     text = ''
     with open('template.cs', 'r') as f:
         text = f.read()
         text = Replace(text,'{PROJECT_NAME}', project_name)
-        text = Replace(text,'{BUILD_DATE}', datetime.now().strftime('%Y.%m.%d'))
+        text = Replace(text,'{BUILD_DATE}', project_version)
     os.makedirs('./Properties')
     with open('Properties/{}.cs'.format('AssemblyInfo'),'w') as f:
         f.write(text)
 
 def ParseArg(argv):
     project_name = ''
+    project_version = ''
     
     if len(argv) < 1:
         return False, None
@@ -107,22 +107,25 @@ def ParseArg(argv):
         file_name = os.path.split(file_name)[1]
         file_name = file_name.split('.')[0]
 
-        file_names = file_name = file_name.split('_', 1)
-        if len(file_names) != 2:
+        file_names = file_name.split('_', 2)
+        if len(file_names) != 3:
             return False, None
         project_name = file_names[1]
-    elif len(argv) == 2:
+        project_version = file_names[2]
+    elif len(argv) == 3:
         project_name = argv[1]
+        project_version = argv[2]
 
-    if project_name == '':
+    if project_name == '' or project_version == '':
         return False, None
     else:
-        return True, [project_name]
+        project_version = project_version.replace('-','.')
+        return True, [project_name, project_version]
 
 def Usage():
     print 'this is Usage()'
-    print 'run_XXX.py'
-    print 'run.py XXX'
+    print 'run_XXX_2016-12-26-00.py'
+    print 'run.py XXX 2016-12-26-00'
 
 if __name__ == '__main__':
     logger.reset()
@@ -135,14 +138,15 @@ if __name__ == '__main__':
     logger.info('start')
     
     project_name = args[0]
+    project_version = args[1]
 
-    DoClean('./', ['.py', 'DLL', '.bat', '.pyc', 'template', '.log', 'data'])
+    DoClean('./', ['.py', 'DLL', '.bat', '.pyc', 'template', 'dll_make', 'data'])
 
     CopyBuildFiles('data', './')
 
     DoSln(project_name)
     DoCsproj(project_name)
-    DoAssemblyInfo(project_name)
+    DoAssemblyInfo(project_name, project_version)
 
     os.system('"{}" {}.sln /build Release /out build_log.log'.format('C:\Program Files (x86)\VS2010\Common7\IDE\devenv.com', project_name))
 
