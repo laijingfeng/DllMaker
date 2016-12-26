@@ -129,7 +129,7 @@ if __name__ == '__main__':
     
     project_name = args[0]
 
-    DoClean('./', 'run_{}.py'.format(project_name) + '#DLL#DLLLib#open_cmd.bat#data#dll_maker.log#dll_maker-prev.log#logger.py#logger.pyc#run.py#template.cs#template.csproj#template.sln')
+    DoClean('./', '#DLL#DLLLib#open_cmd.bat#data#.log#.py#logger.pyc#template.cs#template.csproj#template.sln')
 
     CopyFiles('data', './')
 
@@ -137,6 +137,6 @@ if __name__ == '__main__':
     DoCsproj(project_name)
     DoAssemblyInfo(project_name)
 
-    os.system('"{}" {}.sln /build Release /out build_log.log'.format('E:\Program Files\VS2010\Common7\IDE\devenv.com', project_name))
+    os.system('"{}" {}.sln /build Release /out build_log.log'.format('C:\Program Files (x86)\VS2010\Common7\IDE\devenv.com', project_name))
 
     logger.info('finish')
