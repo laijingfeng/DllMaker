@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 #coding=utf-8
- 
+#version: 2016-12-26-00
+
 import sys, os
 import shutil
 from logger import Logger
@@ -8,9 +9,15 @@ from datetime import datetime
 
 logger = Logger(Logger.LEVEL_INFO, 'dll_maker')
 
-def DoClean(path, pattern = ''):
+def NotClean(fname, pattern):
+    for p in pattern:
+        if fname.find(p) != -1:
+            return True
+    return False
+
+def DoClean(path, pattern):
     for f in os.listdir(path):
-        if pattern.find(f) != -1:
+        if NotClean(f, pattern) == True:
             continue
         sf = os.path.join(path, f)
         if os.path.isfile(sf):
@@ -31,7 +38,7 @@ def DoSln(project_name):
     with open('{}.sln'.format(project_name),'w') as f:
         f.write(text)
 
-def CopyFiles(sDir, tDir):
+def CopyBuildFiles(sDir, tDir):
     for f in os.listdir(sDir):
         if f.find('.meta') != -1: # 去除Unity的meta文件
             continue
@@ -42,7 +49,7 @@ def CopyFiles(sDir, tDir):
                 os.makedirs(tDir)
             open(tf, 'wb').write(open(sf, 'rb').read())
         if os.path.isdir(sf):
-            CopyFiles(sf, tf)
+            CopyBuildFiles(sf, tf)
 
 def GetDLLFiles(path):
     ret = ''
@@ -129,9 +136,9 @@ if __name__ == '__main__':
     
     project_name = args[0]
 
-    DoClean('./', '#DLL#DLLLib#open_cmd.bat#data#.log#.py#logger.pyc#template.cs#template.csproj#template.sln')
+    DoClean('./', ['.py', 'DLL', '.bat', '.pyc', 'template', '.log', 'data'])
 
-    CopyFiles('data', './')
+    CopyBuildFiles('data', './')
 
     DoSln(project_name)
     DoCsproj(project_name)
