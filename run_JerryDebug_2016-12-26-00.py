@@ -8,16 +8,8 @@ from logger import Logger
 
 logger = Logger(Logger.LEVEL_INFO, 'dll_maker')
 
-def NotClean(fname, pattern):
-    for p in pattern:
-        if fname.find(p) != -1:
-            return True
-    return False
-
-def DoClean(path, pattern):
+def DoClean(path):
     for f in os.listdir(path):
-        if NotClean(f, pattern) == True:
-            continue
         sf = os.path.join(path, f)
         if os.path.isfile(sf):
             os.remove(sf)
@@ -31,10 +23,10 @@ def Replace(text, pattern, target):
 
 def DoSln(project_name):
     text = ''
-    with open('template.sln', 'r') as f:
+    with open('./template/template.sln', 'r') as f:
         text = f.read()
         text = Replace(text,'{PROJECT_NAME}', project_name)
-    with open('{}.sln'.format(project_name),'w') as f:
+    with open('./project/{}.sln'.format(project_name),'w') as f:
         f.write(text)
 
 def CopyBuildFiles(sDir, tDir):
@@ -44,6 +36,8 @@ def CopyBuildFiles(sDir, tDir):
         sf = os.path.join(sDir, f)
         tf = os.path.join(tDir, f)
         if os.path.isfile(sf):
+            if f.find('.cs') == -1: # 只要CS文件
+                continue
             if not os.path.exists(tDir):
                 os.makedirs(tDir)
             open(tf, 'wb').write(open(sf, 'rb').read())
@@ -55,7 +49,7 @@ def GetDLLFiles(path):
     for f in os.listdir(path):
         sf = os.path.join(path, f)
         if os.path.isfile(sf):
-            ret = ret + '\n    <Reference Include="' + os.path.splitext(os.path.split(f)[1])[0] + '">\n     <HintPath>' + sf + '</HintPath>\n    </Reference>'
+            ret = ret + '\n    <Reference Include="' + os.path.splitext(os.path.split(f)[1])[0] + '">\n     <HintPath>.' + sf + '</HintPath>\n    </Reference>'
         if os.path.isdir(sf):
             ret = ret + GetDLLFiles(sf)
     return ret
@@ -63,7 +57,7 @@ def GetDLLFiles(path):
 def GetBuildFiles(path, path2):
     ret = ''
     for f in os.listdir(path):
-        if f.find('.meta') != -1: # 去除Unity的meta文件
+        if f.find('.meta') != -1 or f.find('.cs') == -1: # 去除Unity的meta文件，只要CS文件
             continue
         sf = os.path.join(path, f)
         sf2 = os.path.join(path2, f)
@@ -75,25 +69,25 @@ def GetBuildFiles(path, path2):
 
 def DoCsproj(project_name):
     text = ''
-    buld_files = GetBuildFiles('data', '')
-    dll_files = GetDLLFiles('DLL')
+    buld_files = GetBuildFiles('./code/', '')
+    dll_files = GetDLLFiles('./dll/')
     
-    with open('template.csproj', 'r') as f:
+    with open('./template/template.csproj', 'r') as f:
         text = f.read()
         text = Replace(text,'{PROJECT_NAME}', project_name)
         text = Replace(text,'{BUILD_FILES}', buld_files)
         text = Replace(text,'{DLL_FILES}', dll_files)
-    with open('{}.csproj'.format(project_name),'w') as f:
+    with open('./project/{}.csproj'.format(project_name),'w') as f:
         f.write(text)
 
 def DoAssemblyInfo(project_name, project_version):
     text = ''
-    with open('template.cs', 'r') as f:
+    with open('./template/AssemblyInfo.cs', 'r') as f:
         text = f.read()
         text = Replace(text,'{PROJECT_NAME}', project_name)
         text = Replace(text,'{BUILD_DATE}', project_version)
-    os.makedirs('./Properties')
-    with open('Properties/{}.cs'.format('AssemblyInfo'),'w') as f:
+    os.makedirs('./project/Properties')
+    with open('./project/Properties/{}.cs'.format('AssemblyInfo'),'w') as f:
         f.write(text)
 
 def ParseArg(argv):
@@ -140,14 +134,15 @@ if __name__ == '__main__':
     project_name = args[0]
     project_version = args[1]
 
-    DoClean('./', ['.py', 'DLL', '.bat', '.pyc', 'template', 'dll_make', 'data'])
+    # 清理旧工程
+    DoClean('./project/')
 
-    CopyBuildFiles('data', './')
+    CopyBuildFiles('./code/', './project/')
 
     DoSln(project_name)
     DoCsproj(project_name)
     DoAssemblyInfo(project_name, project_version)
 
-    os.system('"{}" {}.sln /build Release /out build_log.log'.format('C:\Program Files (x86)\VS2010\Common7\IDE\devenv.com', project_name))
+    os.system('"{}" ./project/{}.sln /build Release /out ./project/build_log.log'.format('C:\Program Files (x86)\VS2010\Common7\IDE\devenv.com', project_name))
 
     logger.info('finish')
