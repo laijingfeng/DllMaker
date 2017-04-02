@@ -145,6 +145,8 @@ if __name__ == '__main__':
     project_name = args[0]
     project_version = args[1]
     is_editor = args[2]
+    devenv_path = 'E:\Program Files\VS2010\Common7\IDE\devenv.com' # home
+    # 'C:\Program Files (x86)\VS2010\Common7\IDE\devenv.com' # company
 
     # 清理旧工程
     DoClean('./project/')
@@ -155,6 +157,6 @@ if __name__ == '__main__':
     DoCsproj(project_name, is_editor)
     DoAssemblyInfo(project_name, project_version)
 
-    os.system('"{}" ./project/{}.sln /build Release /out ./project/build_log.log'.format('C:\Program Files (x86)\VS2010\Common7\IDE\devenv.com', project_name))
+    os.system('"{}" ./project/{}.sln /build Release /out ./project/build_log.log'.format(devenv_path, project_name))
 
     logger.info('finish')
