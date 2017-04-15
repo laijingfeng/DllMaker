@@ -5,7 +5,7 @@
 标签 | Github、dll-maker、DllMaker
 备注 | [GitHub](https://github.com/laijingfeng/DllMaker)
 创建 | 2016-12-25
-更新 | 2017-04-02 12:06:58
+更新 | 2017-04-15 14:41:05
 
 [TOC]
 
@@ -18,15 +18,29 @@
 - 代码放到code目录，只会拿里边的`.cs`文件
 - 依赖的dll放到dll目录，只会拿`.dll`和`.DLL`文件
 - 执行`run_工程名_版本号_是否编辑器用.py`
-    - 示例：`run_JerryDebug_2016-12-26-00_0.py`
+    - 示例：
+        - `run_JerryDebug_2016-12-26-00_none.py`
+        - `run_JerryDebug_2016-12-26-00_UNITY_EDITOR-UNITY_IOS.py`
 
-> 备注：`是否编辑器用`是针对Unity，编辑器用会打上`UNITY_EDITOR`的宏，输出文件会是`XXX_Editor`，将来配置给`Editor`用
-> 
-> Unity的Dll文件可以是以下两种形式：
-> 
-> 1. XXX（Android和IOS平台）、XXX_Editor（Editor平台）
->
-> 2. XXX（Any平台）
+代码里的宏要用正向的，例如：
+
+```
+#if UNITY_EDITOR
+    a;
+#elif UNITY_ANDROID
+    b;
+#else
+    a;
+#endif
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+    b;
+#else
+    a;
+#endif
+
+编辑器Android平台，应该是a，但是dll中第二种写法会检测为b
+```
 
 # 说明
 
@@ -39,7 +53,7 @@
     - `bin/Release` 最终编译好的Dll会在这里
 - template 构建编译工程用到的模板
 - `dll_maker.log/dll_maker-prev.log` 操作日志
-- `run_xx_xx_x.py` 启动脚本
+- `run_xx_xx_xx.py` 启动脚本
 - `logger.py` log辅助脚本
 
 ## 背景
@@ -50,6 +64,7 @@
 - `xx.csproj`
     - Dll依赖项
     - 代码文件注册
+    - 条件编译符号
 - `AssemblyInfo.cs`
     - 版本号
     - Dll输出名字
