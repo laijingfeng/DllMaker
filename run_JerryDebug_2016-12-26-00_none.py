@@ -76,8 +76,8 @@ def DoCsproj(project_name, define_str):
     with open('./template/template.csproj', 'r') as f:
         text = f.read()
         out_dll_name = project_name
-        if define_str != '':
-            out_dll_name = out_dll_name + '-' + define_str
+        #if define_str != '':
+        #    out_dll_name = out_dll_name + '-' + define_str
         text = Replace(text,'{PROJECT_NAME}', out_dll_name)
         text = Replace(text,'{BUILD_FILES}', buld_files)
         text = Replace(text,'{DLL_FILES}', dll_files)
