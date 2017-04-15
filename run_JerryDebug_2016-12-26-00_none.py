@@ -68,7 +68,7 @@ def GetBuildFiles(path, path2):
             ret = ret + GetBuildFiles(sf, sf2)
     return ret
 
-def DoCsproj(project_name, is_editor):
+def DoCsproj(project_name, define_str):
     text = ''
     buld_files = GetBuildFiles('./code/', '')
     dll_files = GetDLLFiles('./dll/')
@@ -76,15 +76,12 @@ def DoCsproj(project_name, is_editor):
     with open('./template/template.csproj', 'r') as f:
         text = f.read()
         out_dll_name = project_name
-        if is_editor == '1':
-            out_dll_name = out_dll_name + '_Editor'    
+        if define_str != '':
+            out_dll_name = out_dll_name + '-' + define_str
         text = Replace(text,'{PROJECT_NAME}', out_dll_name)
         text = Replace(text,'{BUILD_FILES}', buld_files)
         text = Replace(text,'{DLL_FILES}', dll_files)
-        if is_editor == '1':
-            text = Replace(text,'{DEFINE_CONSTANTS}', 'UNITY_EDITOR')
-        else:
-            text = Replace(text,'{DEFINE_CONSTANTS}', '')
+        text = Replace(text,'{DEFINE_CONSTANTS}', define_str.replace('-', ';'))
     with open('./project/{}.csproj'.format(project_name),'w') as f:
         f.write(text)
 
@@ -101,7 +98,7 @@ def DoAssemblyInfo(project_name, project_version):
 def ParseArg(argv):
     project_name = ''
     project_version = ''
-    is_editor = '0'
+    define_str = ''
     
     if len(argv) < 1:
         return False, None
@@ -115,22 +112,26 @@ def ParseArg(argv):
             return False, None
         project_name = file_names[1]
         project_version = file_names[2]
-        is_editor = file_names[3]
+        define_str = file_names[3]
     elif len(argv) == 4:
         project_name = argv[1]
         project_version = argv[2]
-        is_editor = argv[3]
+        define_str = argv[3]
 
     if project_name == '' or project_version == '':
         return False, None
     else:
-        project_version = project_version.replace('-','.')
-        return True, [project_name, project_version, is_editor]
+        if define_str == 'none':
+            define_str = ''
+        project_version = project_version.replace('-', '.')
+        return True, [project_name, project_version, define_str]
 
 def Usage():
     print 'this is Usage()'
-    print 'run_XXX_2016-12-26-00_0.py'
-    print 'run.py XXX 2016-12-26-00 0'
+    print 'run_XXX_2016-12-26-00_UNITY_EDITOR-UNITY_IOS.py'
+    print 'run_XXX_2016-12-26-00_none.py'
+    print 'run.py XXX 2016-12-26-00 UNITY_EDITOR-UNITY_IOS'
+    print 'run.py XXX 2016-12-26-00 none'
 
 if __name__ == '__main__':
     logger.reset()
@@ -144,8 +145,9 @@ if __name__ == '__main__':
     
     project_name = args[0]
     project_version = args[1]
-    is_editor = args[2]
-    devenv_path = 'E:\Program Files\VS2010\Common7\IDE\devenv.com' # home
+    define_str = args[2]
+    devenv_path = 'C:\Program Files (x86)\VS2010\Common7\IDE\devenv.com' # company
+    # 'E:\Program Files\VS2010\Common7\IDE\devenv.com' # home
     # 'C:\Program Files (x86)\VS2010\Common7\IDE\devenv.com' # company
 
     # 清理旧工程
@@ -154,7 +156,7 @@ if __name__ == '__main__':
     CopyBuildFiles('./code/', './project/')
 
     DoSln(project_name)
-    DoCsproj(project_name, is_editor)
+    DoCsproj(project_name, define_str)
     DoAssemblyInfo(project_name, project_version)
 
     os.system('"{}" ./project/{}.sln /build Release /out ./project/build_log.log'.format(devenv_path, project_name))
