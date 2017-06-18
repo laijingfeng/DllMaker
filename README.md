@@ -5,7 +5,7 @@
 标签 | Github、dll-maker、DLLMaker
 备注 | [GitHub](https://github.com/laijingfeng/DllMaker)
 创建 | 2016-12-25
-更新 | 2017-06-09 14:42:40
+更新 | 2017-06-19 00:35:52
 
 [TOC]
 
@@ -24,7 +24,7 @@
         - `run_JerryDebug_2016-12-26-00_none.py` 没有附加宏
         - `run_JerryDebug_2016-12-26-00_UNITY_EDITOR-UNITY_IOS.py`
 - 看`project/build_log.log`是否说明编译成功
-- 到`project\bin\Release`取编译的DLL
+- 到`project/bin/Release`取编译的DLL
 
 **注意**：代码里的宏要用正向的，例如：
 
