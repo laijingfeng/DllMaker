@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #coding=utf-8
-#version: 2017-04-01-00
+#version: 2017-08-09-00
 
 import sys, os
 import shutil
@@ -41,7 +41,7 @@ def CopyBuildFiles(sDir, tDir):
             if not os.path.exists(tDir):
                 os.makedirs(tDir)
             open(tf, 'wb').write(open(sf, 'rb').read())
-        if os.path.isdir(sf):
+        elif os.path.isdir(sf):
             CopyBuildFiles(sf, tf)
 
 def GetDLLFiles(path):
@@ -51,26 +51,27 @@ def GetDLLFiles(path):
         if os.path.isfile(sf):
             if f.find('.dll') != -1 or f.find('.DLL') != -1:
                 ret = ret + '\n    <Reference Include="' + os.path.splitext(os.path.split(f)[1])[0] + '">\n     <HintPath>.' + sf + '</HintPath>\n    </Reference>'
-        if os.path.isdir(sf):
+        elif os.path.isdir(sf):
             ret = ret + GetDLLFiles(sf)
     return ret
 
 def GetBuildFiles(path, path2):
     ret = ''
     for f in os.listdir(path):
-        if f.find('.meta') != -1 or f.find('.cs') == -1: # 去除Unity的meta文件，只要CS文件
+        if f.find('.meta') != -1: # 去除Unity的meta文件
             continue
         sf = os.path.join(path, f)
         sf2 = os.path.join(path2, f)
         if os.path.isfile(sf):
-            ret = ret + '\n    <Compile Include="' + sf2 + '" />'
-        if os.path.isdir(sf):
+            if f.find('.cs') != -1: # 只要CS文件
+                ret = ret + '\n    <Compile Include="' + sf2 + '" />'
+        elif os.path.isdir(sf):
             ret = ret + GetBuildFiles(sf, sf2)
     return ret
 
 def DoCsproj(project_name, define_str):
     text = ''
-    buld_files = GetBuildFiles('./code/', '')
+    build_files = GetBuildFiles('./code/', '')
     dll_files = GetDLLFiles('./dll/')
     
     with open('./template/template.csproj', 'r') as f:
@@ -79,7 +80,7 @@ def DoCsproj(project_name, define_str):
         #if define_str != '':
         #    out_dll_name = out_dll_name + '-' + define_str
         text = Replace(text,'{PROJECT_NAME}', out_dll_name)
-        text = Replace(text,'{BUILD_FILES}', buld_files)
+        text = Replace(text,'{BUILD_FILES}', build_files)
         text = Replace(text,'{DLL_FILES}', dll_files)
         text = Replace(text,'{DEFINE_CONSTANTS}', define_str.replace('-', ';'))
     with open('./project/{}.csproj'.format(project_name),'w') as f:
