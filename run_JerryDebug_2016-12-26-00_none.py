@@ -1,12 +1,13 @@
 #! /usr/bin/env python
 #coding=utf-8
-#version: 2017-08-09-00
+#version: 2017-10-23-00
 
 import sys, os
 import shutil
 from logger import Logger
 
-logger = Logger(Logger.LEVEL_INFO, 'dll_maker')
+logger = ''
+enter_cwd_path = ''
 
 def DoClean(path):
     for f in os.listdir(path):
@@ -23,10 +24,10 @@ def Replace(text, pattern, target):
 
 def DoSln(project_name):
     text = ''
-    with open('./template/template.sln', 'r') as f:
+    with open(get_exe_path('./template/template.sln'), 'r') as f:
         text = f.read()
         text = Replace(text,'{PROJECT_NAME}', project_name)
-    with open('./project/{}.sln'.format(project_name),'w') as f:
+    with open('{}{}.sln'.format(get_exe_path('./project/'), project_name), 'w') as f:
         f.write(text)
 
 def CopyBuildFiles(sDir, tDir):
@@ -71,10 +72,10 @@ def GetBuildFiles(path, path2):
 
 def DoCsproj(project_name, define_str):
     text = ''
-    build_files = GetBuildFiles('./code/', '')
-    dll_files = GetDLLFiles('./dll/')
+    build_files = GetBuildFiles(get_exe_path('./code/'), get_exe_path('./'))
+    dll_files = GetDLLFiles(get_exe_path('./dll/'))
     
-    with open('./template/template.csproj', 'r') as f:
+    with open(get_exe_path('./template/template.csproj'), 'r') as f:
         text = f.read()
         out_dll_name = project_name
         #if define_str != '':
@@ -83,17 +84,17 @@ def DoCsproj(project_name, define_str):
         text = Replace(text,'{BUILD_FILES}', build_files)
         text = Replace(text,'{DLL_FILES}', dll_files)
         text = Replace(text,'{DEFINE_CONSTANTS}', define_str.replace('-', ';'))
-    with open('./project/{}.csproj'.format(project_name),'w') as f:
+    with open('{}{}.csproj'.format(get_exe_path('./project/'), project_name), 'w') as f:
         f.write(text)
 
 def DoAssemblyInfo(project_name, project_version):
     text = ''
-    with open('./template/AssemblyInfo.cs', 'r') as f:
+    with open(get_exe_path('./template/AssemblyInfo.cs'), 'r') as f:
         text = f.read()
         text = Replace(text,'{PROJECT_NAME}', project_name)
         text = Replace(text,'{BUILD_DATE}', project_version)
-    os.makedirs('./project/Properties')
-    with open('./project/Properties/{}.cs'.format('AssemblyInfo'),'w') as f:
+    os.makedirs(get_exe_path('./project/Properties/'))
+    with open('{}{}.cs'.format(get_exe_path('./project/Properties/'), 'AssemblyInfo'), 'w') as f:
         f.write(text)
 
 def ParseArg(argv):
@@ -134,14 +135,18 @@ def Usage():
     print 'run.py XXX 2016-12-26-00 UNITY_EDITOR-UNITY_IOS'
     print 'run.py XXX 2016-12-26-00 none'
 
-if __name__ == '__main__':
-    logger.reset()
+def get_exe_path(simple_path):
+    global enter_cwd_path
+    return os.path.join(enter_cwd_path, os.path.dirname(sys.argv[0]), simple_path)
 
+if __name__ == '__main__':
     success, args = ParseArg(sys.argv)
     if not success:
         Usage()
         exit(-1)
-        
+
+    logger = Logger(Logger.LEVEL_INFO, get_exe_path('./dll_maker'))
+    logger.reset()
     logger.info('start')
     
     project_name = args[0]
@@ -152,14 +157,14 @@ if __name__ == '__main__':
     # 'C:\Program Files (x86)\VS2010\Common7\IDE\devenv.com' # company
 
     # 清理旧工程
-    DoClean('./project/')
+    DoClean(get_exe_path('./project/'))
 
-    CopyBuildFiles('./code/', './project/')
+    CopyBuildFiles(get_exe_path('./code/'), get_exe_path('./project/'))
 
     DoSln(project_name)
     DoCsproj(project_name, define_str)
     DoAssemblyInfo(project_name, project_version)
 
-    os.system('"{}" ./project/{}.sln /build Release /out ./project/build_log.log'.format(devenv_path, project_name))
+    os.system('"{}" {}{}.sln /build Release /out {}build_log.log'.format(get_exe_path(devenv_path), get_exe_path('./project/'), project_name, get_exe_path('./project/')))
 
     logger.info('finish')
