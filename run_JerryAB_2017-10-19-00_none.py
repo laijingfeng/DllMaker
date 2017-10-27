@@ -144,6 +144,7 @@ if __name__ == '__main__':
     if not success:
         Usage()
         exit(-1)
+    enter_cwd_path = os.getcwd()
 
     logger = Logger(Logger.LEVEL_INFO, get_exe_path('./dll_maker'))
     logger.reset()
