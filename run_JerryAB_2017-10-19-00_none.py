@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+﻿#! /usr/bin/env python
 #coding=utf-8
 #version: 2017-10-23-00
 
@@ -9,7 +9,8 @@ from logger import Logger
 logger = ''
 enter_cwd_path = ''
 
-def DoClean(path):
+
+def do_clean(path):
     for f in os.listdir(path):
         sf = os.path.join(path, f)
         if os.path.isfile(sf):
@@ -17,20 +18,23 @@ def DoClean(path):
         if os.path.isdir(sf):
             shutil.rmtree(sf)
 
-def Replace(text, pattern, target):
+
+def do_replace(text, pattern, target):
     if text.count(pattern) > 0:
         text = text.replace(pattern, target)
     return text
 
-def DoSln(project_name):
+
+def do_sln(project_name):
     text = ''
     with open(get_exe_path('./template/template.sln'), 'r') as f:
         text = f.read()
-        text = Replace(text,'{PROJECT_NAME}', project_name)
+        text = do_replace(text,'{PROJECT_NAME}', project_name)
     with open('{}{}.sln'.format(get_exe_path('./project/'), project_name), 'w') as f:
         f.write(text)
 
-def CopyBuildFiles(sDir, tDir):
+
+def copy_build_files(sDir, tDir):
     for f in os.listdir(sDir):
         if f.find('.meta') != -1: # 去除Unity的meta文件
             continue
@@ -43,20 +47,22 @@ def CopyBuildFiles(sDir, tDir):
                 os.makedirs(tDir)
             open(tf, 'wb').write(open(sf, 'rb').read())
         elif os.path.isdir(sf):
-            CopyBuildFiles(sf, tf)
+            copy_build_files(sf, tf)
 
-def GetDLLFiles(path):
+
+def get_dll_files(path):
     ret = ''
     for f in os.listdir(path):
         sf = os.path.join(path, f)
         if os.path.isfile(sf):
             if f.find('.dll') != -1 or f.find('.DLL') != -1:
-                ret = ret + '\n    <Reference Include="' + os.path.splitext(os.path.split(f)[1])[0] + '">\n     <HintPath>.' + sf + '</HintPath>\n    </Reference>'
+                ret = ret + '\n    <Reference Include="' + os.path.splitext(os.path.split(f)[1])[0] + '">\n     <HintPath>' + sf + '</HintPath>\n    </Reference>'
         elif os.path.isdir(sf):
-            ret = ret + GetDLLFiles(sf)
+            ret = ret + get_dll_files(sf)
     return ret
 
-def GetBuildFiles(path, path2):
+
+def get_build_files(path, path2):
     ret = ''
     for f in os.listdir(path):
         if f.find('.meta') != -1: # 去除Unity的meta文件
@@ -67,37 +73,39 @@ def GetBuildFiles(path, path2):
             if f.find('.cs') != -1: # 只要CS文件
                 ret = ret + '\n    <Compile Include="' + sf2 + '" />'
         elif os.path.isdir(sf):
-            ret = ret + GetBuildFiles(sf, sf2)
+            ret = ret + get_build_files(sf, sf2)
     return ret
 
-def DoCsproj(project_name, define_str):
-    text = ''
-    build_files = GetBuildFiles(get_exe_path('./code/'), get_exe_path('./'))
-    dll_files = GetDLLFiles(get_exe_path('./dll/'))
+
+def do_csproj(project_name, define_str):
+    build_files = get_build_files(get_exe_path('./code/'), get_exe_path('./project/'))
+    dll_files = get_dll_files(get_exe_path('./dll/'))
     
     with open(get_exe_path('./template/template.csproj'), 'r') as f:
         text = f.read()
         out_dll_name = project_name
         #if define_str != '':
         #    out_dll_name = out_dll_name + '-' + define_str
-        text = Replace(text,'{PROJECT_NAME}', out_dll_name)
-        text = Replace(text,'{BUILD_FILES}', build_files)
-        text = Replace(text,'{DLL_FILES}', dll_files)
-        text = Replace(text,'{DEFINE_CONSTANTS}', define_str.replace('-', ';'))
+        text = do_replace(text, '{PROJECT_NAME}', out_dll_name)
+        text = do_replace(text, '{BUILD_FILES}', build_files)
+        text = do_replace(text, '{DLL_FILES}', dll_files)
+        text = do_replace(text, '{DEFINE_CONSTANTS}', define_str.replace('-', ';'))
     with open('{}{}.csproj'.format(get_exe_path('./project/'), project_name), 'w') as f:
         f.write(text)
 
-def DoAssemblyInfo(project_name, project_version):
+
+def do_assembly_info(project_name, project_version):
     text = ''
     with open(get_exe_path('./template/AssemblyInfo.cs'), 'r') as f:
         text = f.read()
-        text = Replace(text,'{PROJECT_NAME}', project_name)
-        text = Replace(text,'{BUILD_DATE}', project_version)
+        text = do_replace(text,'{PROJECT_NAME}', project_name)
+        text = do_replace(text,'{BUILD_DATE}', project_version)
     os.makedirs(get_exe_path('./project/Properties/'))
     with open('{}{}.cs'.format(get_exe_path('./project/Properties/'), 'AssemblyInfo'), 'w') as f:
         f.write(text)
 
-def ParseArg(argv):
+
+def parse_arg(argv):
     project_name = ''
     project_version = ''
     define_str = ''
@@ -128,28 +136,31 @@ def ParseArg(argv):
         project_version = project_version.replace('-', '.')
         return True, [project_name, project_version, define_str]
 
-def Usage():
-    print 'this is Usage()'
+
+def usage():
+    print 'this is usage()'
     print 'run_XXX_2016-12-26-00_UNITY_EDITOR-UNITY_IOS.py'
     print 'run_XXX_2016-12-26-00_none.py'
     print 'run.py XXX 2016-12-26-00 UNITY_EDITOR-UNITY_IOS'
     print 'run.py XXX 2016-12-26-00 none'
+
 
 def get_exe_path(simple_path):
     global enter_cwd_path
     return os.path.join(enter_cwd_path, os.path.dirname(sys.argv[0]), simple_path)
 
 if __name__ == '__main__':
-    success, args = ParseArg(sys.argv)
+    success, args = parse_arg(sys.argv)
     if not success:
-        Usage()
+        usage()
         exit(-1)
     enter_cwd_path = os.getcwd()
 
     logger = Logger(Logger.LEVEL_INFO, get_exe_path('./dll_maker'))
     logger.reset()
     logger.info('start')
-    
+    logger.info(enter_cwd_path)
+
     project_name = args[0]
     project_version = args[1]
     define_str = args[2]
@@ -158,13 +169,13 @@ if __name__ == '__main__':
     # 'C:\Program Files (x86)\VS2010\Common7\IDE\devenv.com' # company
 
     # 清理旧工程
-    DoClean(get_exe_path('./project/'))
+    do_clean(get_exe_path('./project/'))
 
-    CopyBuildFiles(get_exe_path('./code/'), get_exe_path('./project/'))
+    copy_build_files(get_exe_path('./code/'), get_exe_path('./project/'))
 
-    DoSln(project_name)
-    DoCsproj(project_name, define_str)
-    DoAssemblyInfo(project_name, project_version)
+    do_sln(project_name)
+    do_csproj(project_name, define_str)
+    do_assembly_info(project_name, project_version)
 
     os.system('"{}" {}{}.sln /build Release /out {}build_log.log'.format(get_exe_path(devenv_path), get_exe_path('./project/'), project_name, get_exe_path('./project/')))
 
