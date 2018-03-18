@@ -1,8 +1,14 @@
-﻿#! /usr/bin/env python
-#coding=utf-8
-#version: 2017-10-23-00
+﻿# !/usr/bin/python
+# encoding=utf-8
+# version: 2018-03-19 00:39:34
+"""
+DllMaker
+"""
 
-import sys, os
+import sys
+import os
+import json
+import codecs
 import shutil
 from logger import Logger
 
@@ -11,6 +17,9 @@ enter_cwd_path = ''
 
 
 def do_clean(path):
+    """
+    清理旧工程
+    """
     for f in os.listdir(path):
         sf = os.path.join(path, f)
         if os.path.isfile(sf):
@@ -149,6 +158,64 @@ def get_exe_path(simple_path):
     global enter_cwd_path
     return os.path.join(enter_cwd_path, os.path.dirname(sys.argv[0]), simple_path)
 
+def copy_dll(pname):
+    """
+    拷贝dll
+    """
+    dll_lib_dir = ''
+    dll_to_dir = ''
+    with codecs.open(get_exe_path('./config.json'), 'r', 'utf-8') as file_handle:
+        config = json.load(file_handle)
+        dll_lib_dir = get_exe_path(config['dll_lib_dir'])
+        dll_to_dir = get_exe_path(config['dll_to_dir'])
+    if os.path.exists(dll_lib_dir) is False:
+        return
+    if os.path.exists(dll_to_dir):
+        shutil.rmtree(dll_to_dir)
+    os.makedirs(dll_to_dir)
+    pname = pname + '.dll'
+    work_one_dll(pname, dll_lib_dir, dll_to_dir, True)
+
+def find_dll_path(find_filename, dll_lib_dir):
+        """
+        查找dll路径
+        """
+        for parent, dirnames, filenames in os.walk(dll_lib_dir):
+            for filename in filenames:
+                if filename == find_filename:
+                    return parent
+        return ''
+
+def work_one_dll(filename, dll_lib_dir, dll_to_dir, is_root=False):
+        """
+        处理一个dll
+        """
+        path = find_dll_path(filename, dll_lib_dir)
+        if path == '':
+            return
+        
+        dll_path = os.path.join(path, filename)
+        if is_root is False:
+            dll_path_target = os.path.join(dll_to_dir, filename)
+            if os.path.exists(dll_path_target):
+                os.remove(dll_path_target)
+            shutil.copy(dll_path, dll_path_target)
+
+        config_path = dll_path.replace('.dll', '.json')
+        work_one_config(config_path, dll_lib_dir, dll_to_dir)
+
+def work_one_config(path, dll_lib_dir, dll_to_dir):
+        """
+        处理一个配置文件
+        """
+        if os.path.exists(path) is False:
+            return
+        config = {}
+        with codecs.open(get_exe_path(path), 'r', 'utf-8') as file_handle:
+            config = json.load(file_handle)
+        for key in config['dependencies']:
+            work_one_dll(key, dll_lib_dir, dll_to_dir, False)
+
 if __name__ == '__main__':
     success, args = parse_arg(sys.argv)
     if not success:
@@ -168,7 +235,8 @@ if __name__ == '__main__':
     # 'E:\Program Files\VS2010\Common7\IDE\devenv.com' # home
     # 'C:\Program Files (x86)\VS2010\Common7\IDE\devenv.com' # company
 
-    # 清理旧工程
+    copy_dll(project_name)
+    exit(-1)
     do_clean(get_exe_path('./project/'))
 
     copy_build_files(get_exe_path('./code/'), get_exe_path('./project/'))
