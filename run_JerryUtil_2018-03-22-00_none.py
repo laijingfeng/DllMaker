@@ -236,7 +236,6 @@ if __name__ == '__main__':
     # 'C:\Program Files (x86)\VS2010\Common7\IDE\devenv.com' # company
 
     copy_dll(project_name)
-    exit(-1)
     do_clean(get_exe_path('./project/'))
 
     copy_build_files(get_exe_path('./code/'), get_exe_path('./project/'))
