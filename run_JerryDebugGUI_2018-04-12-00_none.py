@@ -1,6 +1,6 @@
 ﻿# !/usr/bin/python
 # encoding=utf-8
-# version: 2018-03-19 00:39:34
+# version: 2018-04-12 14:27:54
 """
 DllMaker
 """
@@ -14,7 +14,7 @@ from logger import Logger
 
 logger = ''
 enter_cwd_path = ''
-
+config = ''  # 配置
 
 def do_clean(path):
     """
@@ -162,12 +162,8 @@ def copy_dll(pname):
     """
     拷贝dll
     """
-    dll_lib_dir = ''
-    dll_to_dir = ''
-    with codecs.open(get_exe_path('./config.json'), 'r', 'utf-8') as file_handle:
-        config = json.load(file_handle)
-        dll_lib_dir = get_exe_path(config['dll_lib_dir'])
-        dll_to_dir = get_exe_path(config['dll_to_dir'])
+    dll_lib_dir = get_exe_path(config['dll_lib_dir'])
+    dll_to_dir = get_exe_path(config['dll_to_dir'])
     if os.path.exists(dll_lib_dir) is False:
         return
     if os.path.exists(dll_to_dir):
@@ -210,10 +206,10 @@ def work_one_config(path, dll_lib_dir, dll_to_dir):
         """
         if os.path.exists(path) is False:
             return
-        config = {}
+        dll_config = {}
         with codecs.open(get_exe_path(path), 'r', 'utf-8') as file_handle:
-            config = json.load(file_handle)
-        for key in config['dependencies']:
+            dll_config = json.load(file_handle)
+        for key in dll_config['dependencies']:
             work_one_dll(key, dll_lib_dir, dll_to_dir, False)
 
 if __name__ == '__main__':
@@ -228,12 +224,15 @@ if __name__ == '__main__':
     logger.info('start')
     logger.info(enter_cwd_path)
 
+    # 加载配置
+    with codecs.open(get_exe_path('./config.json'), 'r', 'utf-8') as file_handle:
+        config = json.load(file_handle)
+    
     project_name = args[0]
     project_version = args[1]
     define_str = args[2]
-    devenv_path = 'C:\Program Files (x86)\VS2010\Common7\IDE\devenv.com' # company
-    # 'E:\Program Files\VS2010\Common7\IDE\devenv.com' # home
-    # 'C:\Program Files (x86)\VS2010\Common7\IDE\devenv.com' # company
+    
+    devenv_path = config['devenv_path']
 
     copy_dll(project_name)
     do_clean(get_exe_path('./project/'))
