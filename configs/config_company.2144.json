@@ -1,4 +1,6 @@
 {
     "dll_lib_dir": "C:/OSChina/JerryDllLib/",
-	"dll_to_dir": "./dll/"
+	"dll_to_dir": "./dll/",
+	"devenv_path": "C:\MyPro\VS2015\Common7\IDE\devenv.com",
+	"des": "company.2144 vs2015"
 }
