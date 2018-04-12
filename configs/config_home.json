@@ -1,6 +1,6 @@
 {
     "dll_lib_dir": "E:/OSChina/JerryDllLib/",
 	"dll_to_dir": "./dll/",
-	"devenv_path": "E:\Program Files\VS2010\Common7\IDE\devenv.com",
+	"devenv_path": "E:/Program Files/VS2010/Common7/IDE/devenv.com",
 	"des": "home vs2010"
 }
